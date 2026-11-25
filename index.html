@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSIS 3380 · Deploy to Render — 图文教程 (Jinran)</title>
+<style>
+  :root { --navy:#1a3a5c; --blue:#2d6ca2; --bg:#f4f7fb; --line:#d7e0ea; --green:#2e7d32; --red:#c62828; --amber:#b26a00; --purple:#6b2fb5; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,"Microsoft YaHei",sans-serif; background:var(--bg); color:#24313f; line-height:1.65; }
+  header { background:linear-gradient(120deg,var(--navy),var(--blue)); color:#fff; padding:28px 32px; }
+  header h1 { margin:0 0 6px; font-size:26px; }
+  header p { margin:4px 0; opacity:.92; }
+  .badge { display:inline-block; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); padding:3px 10px; border-radius:12px; font-size:13px; margin-right:8px; }
+  .wrap { max-width:1020px; margin:0 auto; padding:26px 22px 80px; }
+  .toc { background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px 22px; margin-bottom:26px; }
+  .toc h2 { margin:0 0 10px; font-size:17px; color:var(--navy); }
+  .toc a { display:inline-block; margin:3px 14px 3px 0; color:var(--blue); text-decoration:none; font-size:14px; }
+  .toc a:hover { text-decoration:underline; }
+  section { background:#fff; border:1px solid var(--line); border-radius:10px; padding:22px 26px; margin-bottom:20px; box-shadow:0 2px 6px rgba(20,50,80,.04); }
+  section h2 { color:var(--navy); border-bottom:3px solid var(--line); padding-bottom:8px; margin-top:0; font-size:21px; }
+  section h3 { color:var(--blue); margin:22px 0 8px; font-size:17px; }
+  code { background:#eef2f7; padding:1px 5px; border-radius:4px; font-family:Consolas,"Courier New",monospace; font-size:13px; }
+  .codebox { position:relative; margin:12px 0 18px; }
+  .codebox .bar { display:flex; justify-content:space-between; align-items:center; background:#263545; color:#cdd8e3; padding:5px 12px; border-radius:8px 8px 0 0; font-size:12px; }
+  .codebox button { background:#3f7fb8; color:#fff; border:0; border-radius:4px; padding:3px 10px; cursor:pointer; font-size:12px; }
+  .codebox button:hover { background:#2d6ca2; }
+  pre { margin:0; background:#15202b; color:#e6edf3; padding:14px 16px; border-radius:0 0 8px 8px; overflow:auto; font-family:Consolas,"Courier New",monospace; font-size:13px; line-height:1.5; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:14px; }
+  th,td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--navy); color:#fff; }
+  tr:nth-child(even) td { background:#f7fafc; }
+  .note,.warn,.ok { border-left:5px solid; padding:10px 14px; margin:14px 0; border-radius:0 6px 6px 0; }
+  .note { border-color:var(--blue); background:#eef5fb; }
+  .warn { border-color:var(--amber); background:#fff7e8; }
+  .ok { border-color:var(--green); background:#eef8ef; }
+  .step { display:inline-block; background:var(--navy); color:#fff; width:26px; height:26px; line-height:26px; text-align:center; border-radius:50%; margin-right:8px; font-size:14px; }
+  ul.check { list-style:none; padding-left:0; }
+  ul.check li { padding:5px 0 5px 30px; position:relative; }
+  ul.check li:before { content:"☐"; position:absolute; left:4px; color:var(--blue); font-size:17px; }
+  .click { background:#f3e8ff; color:var(--purple); font-weight:bold; padding:1px 6px; border-radius:4px; }
+  footer { text-align:center; color:#7a8a9a; font-size:13px; padding:20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Deploy to Render — 从零把 Express + MongoDB API 部署上线</h1>
+  <p><span class="badge">CSIS 3380</span><span class="badge">Module 8 Lab</span><span class="badge">Jinran</span><span class="badge">Douglas College</span></p>
+  <p>目标：完成 Lab 的 Task 6，拿到一个公网可访问的 API 链接，连同 GitHub 代码链接一起交 Blackboard（Task 7）。</p>
+  <p>预计耗时：15–25 分钟（含 GitHub 授权和等部署）。每一步都有截图对照和「✅ 过关检查」。</p>
+</header>
+
+<div class="wrap">
+
+<div class="toc">
+  <h2>目录</h2>
+  <a href="#s0">0 开始前检查</a>
+  <a href="#s1">1 Choose service</a>
+  <a href="#s2">2 连接 GitHub 仓库</a>
+  <a href="#s3">3 Configure 配置（最关键）</a>
+  <a href="#s4">4 环境变量 MONGODB_URI</a>
+  <a href="#s5">5 Deploy + 验证</a>
+  <a href="#s6">6 提交 Blackboard</a>
+  <a href="#s7">7 排错表</a>
+  <a href="#s8">附录：配置速查</a>
+</div>
+
+<section id="s0">
+  <h2><span class="step">0</span>开始前检查（3 分钟）</h2>
+  <p>Render 只是“把你的代码放到公网运行”，它本身不存数据。所以先确认这 3 样都齐了：</p>
+  <ul class="check">
+    <li><strong>GitHub 仓库已存在</strong>，里面是你的 API 代码（本 Lab 用 <code>CSIS3380-Module8-Simple-Rest-API-Exercise-Lab-Submission</code>，根目录只有 <code>userlist-api-jinran/</code>）。</li>
+    <li><strong>MongoDB Atlas 集群是 Active</strong>，Network Access 已放行 <code>0.0.0.0/0</code>（Render 出口 IP 不固定）。</li>
+    <li><strong>Atlas 数据库用户密码是有效的</strong>——如果之前泄露过，先去 Atlas → Database Access 重置，再用新密码拼连接串。</li>
+  </ul>
+  <div class="warn"><strong>密码安全</strong>：连接串 <code>mongodb+srv://用户:密码@cluster…/UserList?...</code> 里的密码只放在 Render 的 <strong>Environment Variables</strong> 里，<strong>绝对不要</strong>写进 GitHub 代码或 <code>.env.example</code>。仓库里的 <code>.gitignore</code> 必须排除 <code>.env</code>。</div>
+  <div class="ok"><strong>✅ 过关</strong>：上面 3 项都 confirmed，且你已登录 <code>render.com</code>。</div>
+</section>
+
+<section id="s1">
+  <h2><span class="step">1</span>Choose service — 选服务类型（对应你看到的截图）</h2>
+  <p>你截图里的页面标题是 <strong>Create a new Service</strong>，顶部有三步进度条：<code>1 Choose service → 2 Configure → 3 Deploy</code>。你现在在第 1 步。</p>
+  <h3>要点的那一项</h3>
+  <p>在第一行第二个卡片 <strong>Web Services</strong>（描述是 “Dynamic web app. Ideal for full-stack apps, API servers, and mobile backends.”）里，点紫色链接 <span class="click">New Web Service →</span>。</p>
+  <table>
+    <tr><th>卡片</th><th>要不要选</th><th>原因</th></tr>
+    <tr><td>Static Sites</td><td>❌</td><td>只能放前端静态 HTML/CSS/JS，跑不了 Express 服务器</td></tr>
+    <tr><td><strong>Web Services</strong></td><td>✅</td><td>专门跑 Node/Express API，正是我们要的</td></tr>
+    <tr><td>Private Services</td><td>❌</td><td>仅供 Render 内网其他服务访问，老师打不开</td></tr>
+    <tr><td>Background Workers</td><td>❌</td><td>跑后台任务，没有公网网址</td></tr>
+    <tr><td>Postgres / KeyValue</td><td>❌</td><td>是数据库，我们用 MongoDB Atlas，不需要</td></tr>
+  </table>
+  <div class="ok"><strong>✅ 过关</strong>：页面跳到“Connect a repository / 选择仓库”那一步。</div>
+</section>
+
+<section id="s2">
+  <h2><span class="step">2</span>连接 GitHub 仓库</h2>
+  <h3>2-1 如果还没连过 GitHub</h3>
+  <ol>
+    <li>在仓库列表页面点 <span class="click">Connect GitHub</span>（或 <strong>Install Render</strong>）→ 跳到 GitHub 授权页。</li>
+    <li>点 <span class="click">Authorize Render</span>，可以选择“全部仓库”或只勾选指定仓库。</li>
+    <li>授权完自动跳回 Render。</li>
+  </ol>
+  <h3>2-2 选正确的仓库</h3>
+  <p>在搜索框里输入 <code>Submission</code>，选中：</p>
+  <div class="codebox"><div class="bar"><span>要选的仓库</span><button onclick="copyCode(this)">复制</button></div><pre>JohnnyLin707/CSIS3380-Module8-Simple-Rest-API-Exercise-Lab-Submission</pre></div>
+  <div class="warn"><strong>别选错</strong>：不要选 <code>...-Tutorial</code> 那个仓库（它历史里曾有泄露的密码，而且根目录混着教程和两个项目）。Submission 仓库现在只有 <code>userlist-api-jinran/</code>，正好是部署目标。</div>
+  <p>点该仓库右侧的 <span class="click">Connect</span>。</p>
+  <div class="ok"><strong>✅ 过关</strong>：进入 Step 2 — Configure 页面。</div>
+</section>
+
+<section id="s3">
+  <h2><span class="step">3</span>Configure 配置（最关键，填错就部署失败）</h2>
+  <table>
+    <tr><th>字段</th><th>填什么</th><th>说明</th></tr>
+    <tr><td><strong>Name</strong></td><td><code>userlist-api-jinran</code></td><td>服务名，会体现在网址里，随便取但好认</td></tr>
+    <tr><td><strong>Region</strong></td><td>默认（如 Singapore / Oregon）</td><td>影响访问速度，随便选一个</td></tr>
+    <tr><td><strong>Branch</strong></td><td><code>main</code></td><td>我们推送的就是 main 分支</td></tr>
+    <tr><td><strong>Root Directory</strong></td><td><code>userlist-api-jinran</code></td><td>🔴 <strong>必填</strong>！<code>server.js</code> 在子文件夹里，不填 Render 找不到入口，会报 “Could not find server.js”</td></tr>
+    <tr><td><strong>Runtime</strong></td><td><code>Node</code></td><td>通常自动识别，确认一下即可</td></tr>
+    <tr><td><strong>Build Command</strong></td><td><code>npm install</code></td><td>安装 express/mongoose 等依赖</td></tr>
+    <tr><td><strong>Start Command</strong></td><td><code>node server.js</code></td><td>🔴 不要写 <code>npm start</code>——那是 <code>node --watch</code>，只适合开发，官方教材明确说部署要用 <code>node server.js</code></td></tr>
+    <tr><td><strong>Instance Type</strong></td><td><code>Free</code></td><td>免费档够用，但闲置会休眠</td></tr>
+  </table>
+  <div class="note"><strong>找不到 Root Directory？</strong> 点页面下方的 <span class="click">Advanced</span> 或 <strong>“Show advanced settings”</strong> 展开，就能看到这个输入框。<strong>这一项是本 Lab 最容易漏的坑</strong>——因为 Submission 仓库根目录没有 <code>server.js</code>，它藏在 <code>userlist-api-jinran/</code> 里面。</div>
+  <div class="ok"><strong>✅ 过关</strong>：所有字段填完，尤其确认 Root Directory = <code>userlist-api-jinran</code>。</div>
+</section>
+
+<section id="s4">
+  <h2><span class="step">4</span>环境变量 MONGODB_URI</h2>
+  <p>找到 <strong>Environment Variables</strong> 区域（有的版本在 Configure 页底部，有的在创建服务后的 <strong>Environment</strong> 标签页）。点 <span class="click">Add Environment Variable</span>，加一条：</p>
+  <table>
+    <tr><th>Key</th><th>Value</th></tr>
+    <tr><td><code>MONGODB_URI</code></td><td><code>mongodb+srv://用户名:新密码@cluster1.6qa39ly.mongodb.net/UserList?retryWrites=true&amp;w=majority</code></td></tr>
+  </table>
+  <div class="codebox"><div class="bar"><span>连接串模板（把占位符换成你自己的）</span><button onclick="copyCode(this)">复制</button></div><pre>mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/UserList?retryWrites=true&amp;w=majority</pre></div>
+  <ul>
+    <li><strong>USER / PASSWORD</strong>：Atlas 数据库用户的用户名和你<strong>重置后的新密码</strong>。</li>
+    <li><strong>CLUSTER</strong>：Atlas 给你的集群地址（Connect → Drivers 里复制）。</li>
+    <li><code>/UserList</code> 不能少——这是题目要求的数据库名，漏了数据会写进默认库。</li>
+    <li><strong>PORT 不用填</strong>，Render 会自动提供，代码里的 <code>process.env.PORT || 3000</code> 会自动用它。</li>
+  </ul>
+  <div class="warn"><strong>环境变量 ≠ 代码</strong>：连接串只放这里，不要提交到 GitHub。Render 会把这个值注入到运行时的 <code>process.env.MONGODB_URI</code>，代码第 1 行 <code>require('dotenv').config()</code> 在本地读 <code>.env</code>，在 Render 上则直接用环境变量，两边代码完全一样。</div>
+  <div class="ok"><strong>✅ 过关</strong>：Environment 里能看到 <code>MONGODB_URI</code> 这一条。</div>
+</section>
+
+<section id="s5">
+  <h2><span class="step">5</span>Deploy + 验证上线成功</h2>
+  <h3>5-1 部署</h3>
+  <p>点底部 <span class="click">Create Web Service</span>。页面跳到服务详情页，状态显示 <strong>Deploying...</strong>，等 1–3 分钟变成绿色的 <strong>Live</strong>。</p>
+  <h3>5-2 拿链接</h3>
+  <p>页面顶部会出现你的公网网址，形如：</p>
+  <div class="codebox"><div class="bar"><span>部署链接示例</span><button onclick="copyCode(this)">复制</button></div><pre>https://userlist-api-jinran.onrender.com</pre></div>
+  <h3>5-3 验证（两个都要成功）</h3>
+  <ol>
+    <li>浏览器打开 <code>https://你的服务.onrender.com/</code> → 应看到：
+      <div class="codebox"><div class="bar"><span>期望响应</span><button onclick="copyCode(this)">复制</button></div><pre>{"message":"Welcome to the UserList API"}</pre></div>
+    </li>
+    <li>再打开 <code>https://你的服务.onrender.com/api/users</code> → 应看到 <code>[]</code> 或用户数组。能返回 JSON 就说明 Express 正常、Atlas 也连上了。</li>
+    <li>（可选）用 Postman 对部署地址做一次 POST <code>/api/users/newuser</code>，body <code>{"id":9,"email":"test@a.com","username":"jinran"}</code>，应返回 201。</li>
+  </ol>
+  <div class="warn"><strong>免费实例会休眠</strong>：闲置一段时间后，第一个请求可能要等约 1 分钟才响应，这是正常的，不是挂了。老师第一次打开也可能遇到，属正常现象。</div>
+  <div class="ok"><strong>✅ 过关</strong>：两个网址都能看到 JSON，Postman 能完成一次 POST。</div>
+</section>
+
+<section id="s6">
+  <h2><span class="step">6</span>提交 Blackboard（Task 7，1 mark）</h2>
+  <p>老师要 “Submit both the code and deployed link”——两样都要交：</p>
+  <table>
+    <tr><th>要交的东西</th><th>你的内容</th></tr>
+    <tr><td><strong>Code（代码链接）</strong></td><td><code>https://github.com/JohnnyLin707/CSIS3380-Module8-Simple-Rest-API-Exercise-Lab-Submission</code></td></tr>
+    <tr><td><strong>Deployed link（部署链接）</strong></td><td><code>https://____________.onrender.com</code>（用你第 5 步拿到的真实网址替换）</td></tr>
+  </table>
+  <p>在 Blackboard 提交框里可以这样写：</p>
+  <div class="codebox"><div class="bar"><span>提交文本模板</span><button onclick="copyCode(this)">复制</button></div><pre>Code: https://github.com/JohnnyLin707/CSIS3380-Module8-Simple-Rest-API-Exercise-Lab-Submission
+Deployed API: https://你的服务名.onrender.com
+Name: Jinran | Course: CSIS 3380 | School: Douglas College</pre></div>
+  <div class="note">如果老师允许 ZIP 上传，把 <code>userlist-api-jinran/</code> 压缩即可，<strong>排除</strong> <code>.env</code> 和 <code>node_modules/</code>，但<strong>包含</strong> <code>.env.example</code>。</div>
+</section>
+
+<section id="s7">
+  <h2><span class="step">7</span>排错表（部署失败先看这里）</h2>
+  <table>
+    <tr><th>现象</th><th>原因 / 修法</th></tr>
+    <tr><td><code>Could not find server.js</code> / 部署失败</td><td>Root Directory 没填 <code>userlist-api-jinran</code>。到 Settings → 展开 Advanced → 补上，再 Manual Deploy</td></tr>
+    <tr><td>一直 <code>Building...</code> 不动</td><td>Build Command 写错；必须是 <code>npm install</code>，不是 <code>npm start</code></td></tr>
+    <tr><td>状态 Live 但打开是 <code>Application error</code></td><td>Start Command 写错；必须是 <code>node server.js</code>，不是 <code>npm start</code>（后者带 <code>--watch</code>）</td></tr>
+    <tr><td><code>MongooseServerSelectionError</code></td><td>① 环境变量 <code>MONGODB_URI</code> 没加或拼错；② Atlas → Network Access 没加 <code>0.0.0.0/0</code>；③ 密码没更新</td></tr>
+    <tr><td><code>Authentication failed</code></td><td>Atlas 密码错，或密码含 <code>@ : / # ?</code> 没做 URL 编码；建议只用字母数字</td></tr>
+    <tr><td>API 能开但数据是空的</td><td>连接串里 <code>mongodb.net/</code> 后面不是 <code>UserList</code>，数据写进默认库了 → 改环境变量后重启服务</td></tr>
+    <tr><td>打开要等 1 分钟</td><td>免费实例休眠，正常现象，不是故障</td></tr>
+    <tr><td>改了代码但线上没变</td><td>Render 不会自动同步，去仓库 push 新 commit，或点 Manual Deploy → Deploy latest commit</td></tr>
+  </table>
+</section>
+
+<section id="s8">
+  <h2>附录：配置速查（一眼抄完）</h2>
+  <table>
+    <tr><th>Setting</th><th>Value</th></tr>
+    <tr><td>Service type</td><td>Web Service</td></tr>
+    <tr><td>Repository</td><td><code>JohnnyLin707/CSIS3380-Module8-Simple-Rest-API-Exercise-Lab-Submission</code></td></tr>
+    <tr><td>Branch</td><td><code>main</code></td></tr>
+    <tr><td><strong>Root Directory</strong></td><td><code>userlist-api-jinran</code></td></tr>
+    <tr><td>Runtime</td><td>Node</td></tr>
+    <tr><td>Build Command</td><td><code>npm install</code></td></tr>
+    <tr><td>Start Command</td><td><code>node server.js</code></td></tr>
+    <tr><td>Instance Type</td><td>Free</td></tr>
+    <tr><td>Environment</td><td><code>MONGODB_URI=mongodb+srv://.../UserList?retryWrites=true&amp;w=majority</code></td></tr>
+  </table>
+  <div class="ok"><strong>记住两个“必须”</strong>：Root Directory 必须填 <code>userlist-api-jinran</code>；Start Command 必须是 <code>node server.js</code>。这两个错一个都部署不起来。</div>
+</section>
+
+</div>
+
+<footer>CSIS 3380 · Module 8 · Deploy to Render — prepared for Jinran · Douglas College</footer>
+
+<script>
+function copyCode(btn) {
+  var pre = btn.parentElement.nextElementSibling;
+  var text = pre.innerText;
+  navigator.clipboard.writeText(text).then(function () {
+    var old = btn.textContent;
+    btn.textContent = '已复制 ✓';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>
