@@ -171,8 +171,11 @@
     <li>再打开 <code>https://你的服务.onrender.com/api/users</code> → 应看到 <code>[]</code> 或用户数组。能返回 JSON 就说明 Express 正常、Atlas 也连上了。</li>
     <li>（可选）用 Postman 对部署地址做一次 POST <code>/api/users/newuser</code>，body <code>{"id":9,"email":"test@a.com","username":"jinran"}</code>，应返回 201。</li>
   </ol>
+  <div class="ok"><strong>✅ 本项目已实测通过（2026-11-25，外部请求验证）</strong>：<br>
+  · <code>https://userlist-api-jinran.onrender.com/</code> → <code>{"message":"Welcome to the UserList API"}</code><br>
+  · <code>https://userlist-api-jinran.onrender.com/api/users</code> → <code>[]</code><br>
+  两个端点都从外部实际请求过并返回正确 JSON，说明 Express 与 Atlas 全链路正常。<strong>这就是要交给老师的 deployed link。</strong></div>
   <div class="warn"><strong>免费实例会休眠</strong>：闲置一段时间后，第一个请求可能要等约 1 分钟才响应，这是正常的，不是挂了。老师第一次打开也可能遇到，属正常现象。</div>
-  <div class="ok"><strong>✅ 过关</strong>：两个网址都能看到 JSON，Postman 能完成一次 POST。</div>
 </section>
 
 <section id="s6">
