@@ -111,19 +111,21 @@
 
 <section id="s3">
   <h2><span class="step">3</span>Configure 配置（最关键，填错就部署失败）</h2>
+  <p>你截图里这一页标题是 <strong>“Configure and deploy your new Web Service”</strong>，进度条停在 <code>2 Configure</code>。Source Code 已经显示选中的仓库，不用再动。下面逐项照着改：</p>
   <table>
-    <tr><th>字段</th><th>填什么</th><th>说明</th></tr>
-    <tr><td><strong>Name</strong></td><td><code>userlist-api-jinran</code></td><td>服务名，会体现在网址里，随便取但好认</td></tr>
-    <tr><td><strong>Region</strong></td><td>默认（如 Singapore / Oregon）</td><td>影响访问速度，随便选一个</td></tr>
-    <tr><td><strong>Branch</strong></td><td><code>main</code></td><td>我们推送的就是 main 分支</td></tr>
-    <tr><td><strong>Root Directory</strong></td><td><code>userlist-api-jinran</code></td><td>🔴 <strong>必填</strong>！<code>server.js</code> 在子文件夹里，不填 Render 找不到入口，会报 “Could not find server.js”</td></tr>
-    <tr><td><strong>Runtime</strong></td><td><code>Node</code></td><td>通常自动识别，确认一下即可</td></tr>
-    <tr><td><strong>Build Command</strong></td><td><code>npm install</code></td><td>安装 express/mongoose 等依赖</td></tr>
-    <tr><td><strong>Start Command</strong></td><td><code>node server.js</code></td><td>🔴 不要写 <code>npm start</code>——那是 <code>node --watch</code>，只适合开发，官方教材明确说部署要用 <code>node server.js</code></td></tr>
-    <tr><td><strong>Instance Type</strong></td><td><code>Free</code></td><td>免费档够用，但闲置会休眠</td></tr>
+    <tr><th>字段</th><th>你截图里的当前值</th><th>改成</th><th>说明</th></tr>
+    <tr><td><strong>Name</strong></td><td>一长串仓库名</td><td><code>userlist-api-jinran</code></td><td>服务名，会体现在网址里，短一点好认</td></tr>
+    <tr><td><strong>Language</strong></td><td><code>Node</code></td><td>保持 <code>Node</code></td><td>✅ 已经对了，不用动</td></tr>
+    <tr><td><strong>Branch</strong></td><td><code>main</code></td><td>保持 <code>main</code></td><td>✅ 我们推送的就是 main</td></tr>
+    <tr><td><strong>Region</strong></td><td><code>Virginia (US East)</code></td><td>保持默认</td><td>影响访问速度，随便选</td></tr>
+    <tr><td><strong>Root Directory</strong></td><td>空的（提示 e.g. src）</td><td><strong><code>userlist-api-jinran</code></strong></td><td>🔴 <strong>必填</strong>！<code>server.js</code> 在子文件夹里，不填会报 “Could not find server.js”</td></tr>
+    <tr><td><strong>Build Command</strong></td><td><code>yarn</code></td><td><strong><code>npm install</code></strong></td><td>🔴 Render 默认给 yarn，<strong>必须改</strong>——我们的锁文件是 package-lock.json，用 npm</td></tr>
+    <tr><td><strong>Start Command</strong></td><td><code>yarn start</code></td><td><strong><code>node server.js</code></strong></td><td>🔴 必须改。也不要写 <code>npm start</code>（那是 <code>node --watch</code>，只适合开发）</td></tr>
+    <tr><td><strong>Compute</strong></td><td>已选 <code>Free $0/month</code></td><td>保持 <code>Free</code></td><td>✅ 免费档够用，但闲置会休眠</td></tr>
   </table>
-  <div class="note"><strong>找不到 Root Directory？</strong> 点页面下方的 <span class="click">Advanced</span> 或 <strong>“Show advanced settings”</strong> 展开，就能看到这个输入框。<strong>这一项是本 Lab 最容易漏的坑</strong>——因为 Submission 仓库根目录没有 <code>server.js</code>，它藏在 <code>userlist-api-jinran/</code> 里面。</div>
-  <div class="ok"><strong>✅ 过关</strong>：所有字段填完，尤其确认 Root Directory = <code>userlist-api-jinran</code>。</div>
+  <div class="note"><strong>Root Directory 就在页面上</strong>：你截图里 “Root Directory Optional / If set, Render runs commands from this directory…” 下面那个输入框（灰色提示 <code>e.g. src</code>）就是它，<strong>直接点进去填 <code>userlist-api-jinran</code></strong>，不用展开 Advanced。填完 Render 会在该目录下执行 <code>npm install</code> 和 <code>node server.js</code>。</div>
+  <div class="warn"><strong>Advanced → Health Check Path 的坑</strong>：你截图里 Advanced 区有 <code>Health Check Path</code>，显示 <code>/healthz</code>。<br>· 如果那是<strong>灰色占位文字</strong>（输入框实际是空的）→ 不用管。<br>· 如果输入框里<strong>真的有 <code>/healthz</code> 这个值</strong> → <strong>把它清空</strong>。我们的 API 没有 <code>/healthz</code> 路由，Render 会一直健康检查失败，把服务标记为不健康。<br>其余 Advanced 选项（Secret Files / Pre-Deploy Command / Auto-Deploy / Build Filters）<strong>全部默认</strong>，不用动。</div>
+  <div class="ok"><strong>✅ 过关</strong>：Name / Root Directory / Build Command / Start Command 四项都改完，Health Check Path 确认为空。</div>
 </section>
 
 <section id="s4">
@@ -147,7 +149,7 @@
 <section id="s5">
   <h2><span class="step">5</span>Deploy + 验证上线成功</h2>
   <h3>5-1 部署</h3>
-  <p>点底部 <span class="click">Create Web Service</span>。页面跳到服务详情页，状态显示 <strong>Deploying...</strong>，等 1–3 分钟变成绿色的 <strong>Live</strong>。</p>
+  <p>点页面最底部的紫色按钮 <span class="click">Deploy web service</span>（有些 Render 版本叫 <strong>Create Web Service</strong>，是同一个按钮，位置一样在最下面，旁边显示 <code>$0 / month</code>）。页面跳到服务详情页，状态显示 <strong>Deploying...</strong>，等 1–3 分钟变成绿色的 <strong>Live</strong>。</p>
   <h3>5-2 拿链接</h3>
   <p>页面顶部会出现你的公网网址，形如：</p>
   <div class="codebox"><div class="bar"><span>部署链接示例</span><button onclick="copyCode(this)">复制</button></div><pre>https://userlist-api-jinran.onrender.com</pre></div>
@@ -182,9 +184,10 @@ Name: Jinran | Course: CSIS 3380 | School: Douglas College</pre></div>
   <h2><span class="step">7</span>排错表（部署失败先看这里）</h2>
   <table>
     <tr><th>现象</th><th>原因 / 修法</th></tr>
-    <tr><td><code>Could not find server.js</code> / 部署失败</td><td>Root Directory 没填 <code>userlist-api-jinran</code>。到 Settings → 展开 Advanced → 补上，再 Manual Deploy</td></tr>
-    <tr><td>一直 <code>Building...</code> 不动</td><td>Build Command 写错；必须是 <code>npm install</code>，不是 <code>npm start</code></td></tr>
-    <tr><td>状态 Live 但打开是 <code>Application error</code></td><td>Start Command 写错；必须是 <code>node server.js</code>，不是 <code>npm start</code>（后者带 <code>--watch</code>）</td></tr>
+    <tr><td><code>Could not find server.js</code> / 部署失败</td><td>Root Directory 没填 <code>userlist-api-jinran</code>。回到 Configure 补上，或到 Settings 里补，再 Manual Deploy</td></tr>
+    <tr><td>一直 <code>Building...</code> 不动 / 报 yarn 相关错</td><td>Build Command 还是 Render 默认的 <code>yarn</code>，必须改成 <code>npm install</code>（我们有 package-lock.json）</td></tr>
+    <tr><td>状态 Live 但打开是 <code>Application error</code></td><td>Start Command 还是默认的 <code>yarn start</code> 或写成了 <code>npm start</code>；必须是 <code>node server.js</code>（后两者带 watch，不适合部署）</td></tr>
+    <tr><td>服务一直显示 unhealthy / 反复重启</td><td>Advanced → Health Check Path 里真填了 <code>/healthz</code>，但我们的 API 没有这个路由 → 清空它</td></tr>
     <tr><td><code>MongooseServerSelectionError</code></td><td>① 环境变量 <code>MONGODB_URI</code> 没加或拼错；② Atlas → Network Access 没加 <code>0.0.0.0/0</code>；③ 密码没更新</td></tr>
     <tr><td><code>Authentication failed</code></td><td>Atlas 密码错，或密码含 <code>@ : / # ?</code> 没做 URL 编码；建议只用字母数字</td></tr>
     <tr><td>API 能开但数据是空的</td><td>连接串里 <code>mongodb.net/</code> 后面不是 <code>UserList</code>，数据写进默认库了 → 改环境变量后重启服务</td></tr>
@@ -207,7 +210,7 @@ Name: Jinran | Course: CSIS 3380 | School: Douglas College</pre></div>
     <tr><td>Instance Type</td><td>Free</td></tr>
     <tr><td>Environment</td><td><code>MONGODB_URI=mongodb+srv://.../UserList?retryWrites=true&amp;w=majority</code></td></tr>
   </table>
-  <div class="ok"><strong>记住两个“必须”</strong>：Root Directory 必须填 <code>userlist-api-jinran</code>；Start Command 必须是 <code>node server.js</code>。这两个错一个都部署不起来。</div>
+  <div class="ok"><strong>记住三个“必须”</strong>：① Root Directory 必须填 <code>userlist-api-jinran</code>；② Build / Start Command 必须把默认的 <code>yarn</code> / <code>yarn start</code> 改成 <code>npm install</code> / <code>node server.js</code>；③ Health Check Path 必须为空（<code>/healthz</code> 不能有值）。三个错一个都部署不起来。</div>
 </section>
 
 </div>
