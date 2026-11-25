@@ -124,8 +124,18 @@
     <tr><td><strong>Compute</strong></td><td>已选 <code>Free $0/month</code></td><td>保持 <code>Free</code></td><td>✅ 免费档够用，但闲置会休眠</td></tr>
   </table>
   <div class="note"><strong>Root Directory 就在页面上</strong>：你截图里 “Root Directory Optional / If set, Render runs commands from this directory…” 下面那个输入框（灰色提示 <code>e.g. src</code>）就是它，<strong>直接点进去填 <code>userlist-api-jinran</code></strong>，不用展开 Advanced。填完 Render 会在该目录下执行 <code>npm install</code> 和 <code>node server.js</code>。</div>
-  <div class="warn"><strong>Advanced → Health Check Path 的坑</strong>：你截图里 Advanced 区有 <code>Health Check Path</code>，显示 <code>/healthz</code>。<br>· 如果那是<strong>灰色占位文字</strong>（输入框实际是空的）→ 不用管。<br>· 如果输入框里<strong>真的有 <code>/healthz</code> 这个值</strong> → <strong>把它清空</strong>。我们的 API 没有 <code>/healthz</code> 路由，Render 会一直健康检查失败，把服务标记为不健康。<br>其余 Advanced 选项（Secret Files / Pre-Deploy Command / Auto-Deploy / Build Filters）<strong>全部默认</strong>，不用动。</div>
-  <div class="ok"><strong>✅ 过关</strong>：Name / Root Directory / Build Command / Start Command 四项都改完，Health Check Path 确认为空。</div>
+  <h3>3-1 Advanced（高级设置）逐项处理</h3>
+  <p>你截图里 Configure 页底部有 <span class="click">Advanced</span>，展开后是一堆选项。<strong>对本 Lab 全部保持默认即可</strong>，只有 Health Check Path 一项要注意：</p>
+  <table>
+    <tr><th>Advanced 里的项目</th><th>你要做的</th><th>原因</th></tr>
+    <tr><td><strong>Secret Files</strong>（Add Secret File）</td><td>❌ 不用碰</td><td>我们用上面的 Environment Variables 存连接串，不用 Secret File</td></tr>
+    <tr><td><strong>Health Check Path</strong>（显示 <code>/healthz</code>）</td><td>⚠️ <strong>确保这个框最终为空</strong></td><td>见下方“怎么判断”</td></tr>
+    <tr><td><strong>Pre-Deploy Command</strong></td><td>❌ 留空</td><td>不需要数据库迁移等预部署操作</td></tr>
+    <tr><td><strong>Auto-Deploy</strong>（<code>On Commit</code>）</td><td>✅ 保持默认 <code>On Commit</code></td><td>以后你 push 新 commit 会自动重新部署，省事</td></tr>
+    <tr><td><strong>Build Filters</strong>（Included / Ignored Paths）</td><td>❌ 全部留空</td><td>不用按路径过滤自动部署</td></tr>
+  </table>
+  <div class="warn"><strong>Health Check Path 的坑 + 怎么判断</strong>：你看到的 <code>/healthz</code> 很可能是<strong>灰色占位文字</strong>（placeholder），只是告诉你“填的话填这种格式”，输入框其实是空的。<br><strong>判断方法</strong>：用鼠标点一下那个输入框——<br>· 点进去后文字是浅灰 / 一打字就消失 → 占位符，<strong>留空就好</strong>；<br>· 点进去后 <code>/healthz</code> 是深色真实文字 → <strong>全选删掉，让它空着</strong>。<br>为什么必须空：我们的 API 没有 <code>/healthz</code> 路由。若 Render 真去检查它，会一直得到 404，可能把服务标记成 unhealthy 或反复重启。<strong>最稳妥：不管原来是什么，确保这个框最后为空。</strong></div>
+  <div class="ok"><strong>✅ 过关</strong>：Name / Root Directory / Build Command / Start Command 四项都改完；Advanced 里 Health Check Path 确认为空，其余默认。</div>
 </section>
 
 <section id="s4">
